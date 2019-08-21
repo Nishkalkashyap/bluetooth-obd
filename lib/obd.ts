@@ -16,6 +16,7 @@ export class OBDReader extends EventEmitter {
     receivedData = '';
     protocol = '0';
     btSerial: BSP.BluetoothSerialPort
+    intervalWriter: number;
 
     /**
      * Set the protocol version number to use with your car.  Defaults to 0
@@ -107,9 +108,9 @@ export class OBDReader extends EventEmitter {
             //Event connected
             this.emit('connected');
 
-            this.btSerial.on('data', (data) => {
+            this.btSerial.on('data', (data: string) => {
                 let currentString, arrayOfCommands;
-                currentString = this.receivedData + data.toString('utf8'); // making sure it's a utf8 string
+                currentString = this.receivedData + data.toString(); // making sure it's a utf8 string
 
                 arrayOfCommands = currentString.split('>');
 
@@ -162,7 +163,7 @@ export class OBDReader extends EventEmitter {
                     clearInterval(this.intervalWriter);
                     this.removeAllPollers();
                 }
-        }, writeDelay); //Updated with Adaptive Timing on ELM327. 20 queries a second seems good enough.
+        }, writeDelay) as any as number; //Updated with Adaptive Timing on ELM327. 20 queries a second seems good enough.
 
         return this;
     };
@@ -319,10 +320,14 @@ function getPIDByName(name: string): string {
  * @return {string} reply.pid - The PID. --! Only if the reply is a PID.
  */
 function parseOBDCommand(hexString: string): object {
-    const byteNumber,
-        valueArray; //New object
+    let byteNumber;
 
-    const reply = {};
+    const reply: {
+        value: string | number;
+        mode: string;
+        pid: string;
+        name: string
+    } = {} as any;
     if (hexString === "NO DATA" || hexString === "OK" || hexString === "?" || hexString === "UNABLE TO CONNECT" || hexString === "SEARCHING...") {
         //No data or OK is the response, return directly.
         reply.value = hexString;
@@ -330,7 +335,7 @@ function parseOBDCommand(hexString: string): object {
     }
 
     hexString = hexString.replace(/ /g, ''); //Whitespace trimming //Probably not needed anymore?
-    valueArray = [];
+    const valueArray = [];
 
     for (byteNumber = 0; byteNumber < hexString.length; byteNumber += 2) {
         valueArray.push(hexString.substr(byteNumber, 2));
@@ -339,22 +344,22 @@ function parseOBDCommand(hexString: string): object {
     if (valueArray[0] === "41") {
         reply.mode = valueArray[0];
         reply.pid = valueArray[1];
-        for (const i = 0; i < PIDS.length; i++) {
+        for (let i = 0; i < PIDS.length; i++) {
             if (PIDS[i].pid == reply.pid) {
                 const numberOfBytes = PIDS[i].bytes;
                 reply.name = PIDS[i].name;
                 switch (numberOfBytes) {
                     case 1:
-                        reply.value = PIDS[i].convertToUseful(valueArray[2]);
+                        reply.value = (PIDS[i] as any).convertToUseful(valueArray[2]);
                         break;
                     case 2:
-                        reply.value = PIDS[i].convertToUseful(valueArray[2], valueArray[3]);
+                        reply.value = (PIDS[i] as any).convertToUseful(valueArray[2], valueArray[3]);
                         break;
                     case 4:
-                        reply.value = PIDS[i].convertToUseful(valueArray[2], valueArray[3], valueArray[4], valueArray[5]);
+                        reply.value = (PIDS[i] as any).convertToUseful(valueArray[2], valueArray[3], valueArray[4], valueArray[5]);
                         break;
                     case 8:
-                        reply.value = PIDS[i].convertToUseful(valueArray[2], valueArray[3], valueArray[4], valueArray[5], valueArray[6], valueArray[7], valueArray[8], valueArray[9]);
+                        reply.value = (PIDS[i] as any).convertToUseful(valueArray[2], valueArray[3], valueArray[4], valueArray[5], valueArray[6], valueArray[7], valueArray[8], valueArray[9]);
                         break;
                 }
                 break; //Value is converted, break out the for loop.
@@ -365,7 +370,7 @@ function parseOBDCommand(hexString: string): object {
         for (let i = 0; i < PIDS.length; i++) {
             if (PIDS[i].mode == "03") {
                 reply.name = PIDS[i].name;
-                reply.value = PIDS[i].convertToUseful(valueArray[1], valueArray[2], valueArray[3], valueArray[4], valueArray[5], valueArray[6]);
+                reply.value = (PIDS[i] as any).convertToUseful(valueArray[1], valueArray[2], valueArray[3], valueArray[4], valueArray[5], valueArray[6]);
             }
         }
     }
