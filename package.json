@@ -1,29 +1,29 @@
 {
-  "name": "bluetooth-obd",
-  "version": "0.2.4",
+  "name": "bluetooth-obd2",
+  "version": "0.0.1",
   "description": "Package for communicating with a bluetooth OBD-II reader",
   "author": {
-    "name": "Eric Smekens",
-    "email": "ericsmekens@msn.com",
-    "url": "http://github.com/EricSmekens"
+    "name": "Nishkal",
+    "email": "hello@nishkal.in",
+    "url": "http://github.com/Nishkalkashyap"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/EricSmekens/node-bluetooth-obd.git"
+    "url": "git+https://github.com/Nishkalkashyap/bluetooth-obd.git"
   },
   "main": "./dist/obd.js",
+  "files": [
+    "dist/"
+  ],
   "dependencies": {
-    "bluetooth-serial-port": "~2.1.0"
+    "bluetooth-serial-port": "^2.2.5"
   },
   "devDependencies": {
     "typescript": "^3.5.3"
   },
-  "engines": {
-    "node": ">= 0.8.x",
-    "npm": ">= 1.1.x"
-  },
   "scripts": {
-    "install": ""
+    "build": "tsc",
+    "prepublishOnly": "tsc"
   },
   "keywords": [
     "obd",

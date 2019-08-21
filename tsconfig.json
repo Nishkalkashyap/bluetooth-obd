@@ -28,8 +28,7 @@
     "allowJs": true
   },
   "include": [
-    "src/*",
-    "worker/*"
+    "lib/*"
   ],
   "exclude": [
     "**/node_modules/*",
