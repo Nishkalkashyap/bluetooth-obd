@@ -1,18 +1,8 @@
-'use strict';
-//Used for event emitting.
 const EventEmitter = require('events').EventEmitter;
 import util from 'util';
 
-/**
- * obdInfo.js for all PIDS.
- * @type {*}
- */
 import PIDS from './obdInfo';
 
-/**
- * Constant for defining delay between writes.
- * @type {number}
- */
 const writeDelay = 50;
 
 /**
@@ -21,23 +11,12 @@ const writeDelay = 50;
  */
 const queue = [];
 
-// Class OBDReader
-const OBDReader;
+class OBDReader extends EventEmitter {
+    connected: boolean = false;
+    receivedData = '';
+    protocol = '0';
+}
 
-/**
- * Creates an instance of OBDReader.
- * @constructor
- * @param {string} address MAC-address of device that will be connected to.
- * @param {number} channel Channel that the serial port service runs on.
- * @this {OBDReader}
- */
-OBDReader = function () {
-    EventEmitter.call(this);
-    this.connected = false;
-    this.receivedData = "";
-    this.protocol = '0';
-    return this;
-};
 util.inherits(OBDReader, EventEmitter);
 
 /**
@@ -46,7 +25,7 @@ util.inherits(OBDReader, EventEmitter);
  * @return {string} PID in hexadecimal ASCII
  */
 function getPIDByName(name) {
-    const i;
+    let i: number;
     for (i = 0; i < PIDS.length; i++) {
         if (PIDS[i].name === name) {
             if (PIDS[i].pid !== undefined) {
@@ -112,7 +91,7 @@ function parseOBDCommand(hexString) {
         }
     } else if (valueArray[0] === "43") {
         reply.mode = valueArray[0];
-        for (const i = 0; i < PIDS.length; i++) {
+        for (let i = 0; i < PIDS.length; i++) {
             if (PIDS[i].mode == "03") {
                 reply.name = PIDS[i].name;
                 reply.value = PIDS[i].convertToUseful(valueArray[1], valueArray[2], valueArray[3], valueArray[4], valueArray[5], valueArray[6]);

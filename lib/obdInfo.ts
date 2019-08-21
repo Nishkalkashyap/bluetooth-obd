@@ -32,8 +32,10 @@ function convertPIDSupported(byteA, byteB, byteC, byteD) {
     return pidStatus;
 }
 function convertFuelSystem(byteA, byteB) {
-    const reply = {};
-    reply.system1 = bitDecoder(byteA);
+    const reply = {
+        system1: bitDecoder(byteA),
+        system2: undefined
+    };
     if (byteB) {
         reply.system2 = bitDecoder(byteB);
     }
