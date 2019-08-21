@@ -165,25 +165,25 @@ function convertLambda2(byteA, byteB, byteC, byteD) {
     };
     return reply;
 }
-function convertCatalystTemperature(byteA, byteB) {
+function convertCatalystTemperature(byteA : string, byteB : string) {
     return ((parseInt(byteA, 16) * 256) + parseInt(byteB, 16)) / 10 - 40;
 }
-function convertControlModuleVoltage(byteA, byteB) {
+function convertControlModuleVoltage(byteA : string, byteB : string) {
     return ((parseInt(byteA, 16) * 256) + parseInt(byteB, 16)) / 1000;
 }
-function convertAbsoluteLoad(byteA, byteB) {
+function convertAbsoluteLoad(byteA : string, byteB : string) {
     return ((parseInt(byteA, 16) * 256) + parseInt(byteB, 16)) * 100 / 255;
 }
-function convertLambda3(byteA, byteB) {
+function convertLambda3(byteA : string, byteB : string) {
     return ((parseInt(byteA, 16) * 256) + parseInt(byteB, 16)) / 32768;
 }
-function convertAmbientAirTemp(byte) {
+function convertAmbientAirTemp(byte : string) {
     return parseInt(byte, 16) - 40;
 }
-function convertMinutes(byteA, byteB) {
+function convertMinutes(byteA : string, byteB : string) {
     return (parseInt(byteA, 16) * 256) + parseInt(byteB, 16);
 }
-function convertExternalTestEquipment(byteA, byteB, byteC, byteD) {
+function convertExternalTestEquipment(byteA : string, byteB : string, byteC : string, byteD : string) {
     const reply = {
         te1: bitDecoder(byteA),
         te2: bitDecoder(byteB),
@@ -192,7 +192,7 @@ function convertExternalTestEquipment(byteA, byteB, byteC, byteD) {
     };
     return reply;
 }
-function convertExternalTestEquipment2(byteA, byteB, byteC, byteD) {
+function convertExternalTestEquipment2(byteA : string, byteB : string, byteC : string, byteD : string) {
     const reply = {
 
         te1: bitDecoder(byteA) * 10,
@@ -202,34 +202,34 @@ function convertExternalTestEquipment2(byteA, byteB, byteC, byteD) {
     };
     return reply;
 }
-function convertAbsoluteVaporPressure(byteA, byteB) {
+function convertAbsoluteVaporPressure(byteA : string, byteB : string) {
     return ((parseInt(byteA, 16) * 256) + parseInt(byteB, 16)) / 200;
 }
-function convertSystemVaporPressure(byteA, byteB) {
+function convertSystemVaporPressure(byteA : string, byteB : string) {
     return ((parseInt(byteA, 16) * 256) + parseInt(byteB, 16)) - 32767;
 }
-function convertShortOxygenSensorOutput(byteA, byteB) {
+function convertShortOxygenSensorOutput(byteA : string, byteB : string) {
     const reply = {
         bank1: (parseInt(byteA, 16) - 128) * 100 / 128,
         bank2: (parseInt(byteB, 16) - 128) * 100 / 128
     };
     return reply;
 }
-function convertFuelRailPressureAbs(byteA, byteB) {
+function convertFuelRailPressureAbs(byteA : string, byteB : string) {
     return ((parseInt(byteA, 16) * 256) + parseInt(byteB, 16)) * 10;
 }
-function convertFuelInjectionTiming(byteA, byteB) {
+function convertFuelInjectionTiming(byteA : string, byteB : string) {
     return (((parseInt(byteA, 16) * 256) + parseInt(byteB, 16)) - 26880) / 128;
 }
-function convertEngineFuelRate(byteA, byteB) {
+function convertEngineFuelRate(byteA : string, byteB : string) {
     return ((parseInt(byteA, 16) * 256) + parseInt(byteB, 16)) * 0.05;
 }
 
-function convertEngineTorque(byte) {
+function convertEngineTorque(byte : string) {
     return parseInt(byte, 16) - 125;
 }
 
-function convertExhastGasTemperature(byteA, byteB) {
+function convertExhastGasTemperature(byteA : string, byteB : string) {
     return (parseInt(byteA, 16) * 256 + parseInt(byteB, 16)) / 10 - 40;
 }
 //DTC
@@ -238,10 +238,10 @@ function notSupported() {
     return;
 }
 //VIN
-function convertVIN_count(byte) {
+function convertVIN_count(byte : string) {
     return byte;
 }
-function convertVIN(byte) {
+function convertVIN(byte : string) {
     byte = byte.split("");
     const tmp = [], vin = "";
     for (const i in byte) {
@@ -252,13 +252,12 @@ function convertVIN(byte) {
     return vin;
 }
 
-const responsePIDS;
 const modeRealTime = "01";
 const modeRequestDTC = "03";
 const modeClearDTC = "04";
 const modeVin = "09";
 
-responsePIDS = [
+const responsePIDS = [
     //Realtime data
     { mode: modeRealTime, pid: "00", bytes: 4, name: "pidsupp0", description: "PIDs supported 00-20", min: 0, max: 0, unit: "Bit Encoded", convertToUseful: convertPIDSupported },
     { mode: modeRealTime, pid: "01", bytes: 4, name: "dtc_cnt", description: "Monitor status since DTCs cleared", min: 0, max: 0, unit: "Bit Encoded", convertToUseful: convertDTCCheck },
@@ -374,8 +373,9 @@ responsePIDS = [
 
 
     //DTC's
-    { mode: modeRequestDTC, pid: undefined, bytes: 6, name: "requestdtc", description: "Requested DTC", convertToUseful: convertDTCRequest }, //n*6 --> For each code, 6 bytes.
-    { mode: modeClearDTC, pid: undefined, bytes: 0, name: "cleardtc", description: "Clear Trouble Codes (Clear engine light)", convertToUseful: notSupported },
+    // my fake modification
+    // { mode: modeRequestDTC, pid: undefined, bytes: 6, name: "requestdtc", description: "Requested DTC", convertToUseful: convertDTCRequest }, //n*6 --> For each code, 6 bytes.
+    // { mode: modeClearDTC, pid: undefined, bytes: 0, name: "cleardtc", description: "Clear Trouble Codes (Clear engine light)", convertToUseful: notSupported },
 
     //VIN
     { mode: modeVin, pid: "00", bytes: 4, name: "vinsupp0", description: "Vehicle Identification Number", convertToUseful: bitDecoder },
