@@ -11,13 +11,40 @@ const writeDelay = 50;
  */
 const queue = [];
 
-class OBDReader extends EventEmitter {
+export class OBDReader extends EventEmitter {
     connected: boolean = false;
     receivedData = '';
     protocol = '0';
+
+    /**
+     * Set the protocol version number to use with your car.  Defaults to 0
+     * which is to autoselect.
+     *
+     * Uses the ATSP command - see http://www.obdtester.com/elm-usb-commands
+     *
+     * @default 0
+     * 
+     */
+    setProtocol(protocol: string) {
+        if (protocol.toString().search(/^[0-9]$/) === -1) {
+            throw "setProtocol: Must provide a number between 0 and 9 - refer to ATSP section of http://www.obdtester.com/elm-usb-commands";
+        }
+        this.protocol = protocol;
+    }
+
+/**
+ * Get the protocol version number set for this object.  Defaults to 0
+ * which is to autoselect.
+ *
+ * Uses the ATSP command - see http://www.obdtester.com/elm-usb-commands
+ *
+ */
+    getProtocol() {
+        return this.protocol;
+    }
 }
 
-util.inherits(OBDReader, EventEmitter);
+// util.inherits(OBDReader, EventEmitter);
 
 /**
  * Find a PID-value by name.
@@ -102,37 +129,10 @@ function parseOBDCommand(hexString) {
 }
 
 /**
- * Set the protocol version number to use with your car.  Defaults to 0
- * which is to autoselect.
- *
- * Uses the ATSP command - see http://www.obdtester.com/elm-usb-commands
- *
- * @default 0
- * 
- */
-OBDReader.prototype.setProtocol = function (protocol) {
-    if (protocol.toString().search(/^[0-9]$/) === -1) {
-        throw "setProtocol: Must provide a number between 0 and 9 - refer to ATSP section of http://www.obdtester.com/elm-usb-commands";
-    }
-    this.protocol = protocol;
-}
-
-/**
- * Get the protocol version number set for this object.  Defaults to 0
- * which is to autoselect.
- *
- * Uses the ATSP command - see http://www.obdtester.com/elm-usb-commands
- *
- */
-OBDReader.prototype.getProtocol = function () {
-    return this.protocol;
-}
-
-/**
  * Attempts discovery of and subsequent connection to Bluetooth device and channel
  * @param {string} query Query string to be fuzzy-ish matched against device name/address
  */
-OBDReader.prototype.autoconnect = function (query : string) {
+OBDReader.prototype.autoconnect = function (query: string) {
     const self = this; //Enclosure
     const btSerial = new (require('bluetooth-serial-port')).BluetoothSerialPort();
     const search = new RegExp(query.replace(/\W/g, ''), 'gi');
@@ -360,5 +360,3 @@ OBDReader.prototype.startPolling = function (interval) {
 OBDReader.prototype.stopPolling = function () {
     clearInterval(pollerInterval);
 };
-
-const exports = module.exports = OBDReader;
