@@ -1,25 +1,25 @@
 'use strict';
 
-function checkHex(n) {
+function checkHex(n: string) {
     return /^[0-9A-Fa-f]{1,64}$/.test(n);
 }
-function Hex2Bin(n) {
+function Hex2Bin(n: string) {
     if (!checkHex(n)) {
         return 0;
     }
     return zeroFill(parseInt(n, 16).toString(2), 4);
 }
-function zeroFill(number, width) {
+function zeroFill(number: string, width: number) {
     width -= number.toString().length;
     if (width > 0) {
         return new Array(width + (/\./.test(number) ? 2 : 1)).join('0') + number;
     }
     return number + ""; // always return a string
 }
-function bitDecoder(byte) {
+function bitDecoder(byte: string) {
     return parseInt(byte, 2);
 }
-function convertPIDSupported(byteA, byteB, byteC, byteD) {
+function convertPIDSupported(byteA: string, byteB: string, byteC: string, byteD: string) {
     const hexstring = byteA + byteB + byteC + byteD;
     const pidHex = hexstring.split('');
     const pidStatus = [];
@@ -31,7 +31,7 @@ function convertPIDSupported(byteA, byteB, byteC, byteD) {
     });
     return pidStatus;
 }
-function convertFuelSystem(byteA, byteB) {
+function convertFuelSystem(byteA: string, byteB: string) {
     const reply = {
         system1: bitDecoder(byteA),
         system2: undefined
@@ -41,7 +41,7 @@ function convertFuelSystem(byteA, byteB) {
     }
     return reply;
 }
-function convertDTCCheck(byteA, byteB, byteC, byteD) {
+function convertDTCCheck(byteA: string, byteB: string, byteC: string, byteD: string) {
     //ByteB, ByteC and ByteD are not read. These bytes are for testing purposes, which is not supported in this module.
     const byteValue, mil, numberOfDTCs, reply;
     byteValue = parseInt(byteA, 16);
@@ -100,90 +100,90 @@ function convertDTCRequest(byteA, byteB, byteC, byteD, byteE, byteF) {
     reply.errors[2] = decodeDTCCode(byteE, byteF);
     return reply;
 }
-function convertLoad(byte) {
+function convertLoad(byte: string) {
     return parseInt(byte, 16) * (100 / 256);
 }
-function convertTemp(byte) {
+function convertTemp(byte: string) {
     return parseInt(byte, 16) - 40;
 }
-function convertFuelTrim(byte) {
+function convertFuelTrim(byte: string) {
     return (parseInt(byte, 16) - 128) * (100 / 128);
 }
-function convertFuelRailPressure(byte) {
+function convertFuelRailPressure(byte: string) {
     return parseInt(byte, 16) * 3;
 }
-function convertIntakePressure(byte) {
+function convertIntakePressure(byte: string) {
     return parseInt(byte, 16);
 }
-function convertRPM(byteA, byteB) {
+function convertRPM(byteA: string, byteB: string) {
     return ((parseInt(byteA, 16) * 256) + parseInt(byteB, 16)) / 4;
 }
-function convertSpeed(byte) {
+function convertSpeed(byte: string) {
     return parseInt(byte, 16);
 }
-function convertSparkAdvance(byte) {
+function convertSparkAdvance(byte: string) {
     return (parseInt(byte, 16) / 2) - 64;
 }
-function convertAirFlowRate(byteA, byteB) {
+function convertAirFlowRate(byteA: string, byteB: string) {
     return ((parseInt(byteA, 16) * 256.0) + parseInt(byteB, 16)) / 100;
 }
-function convertThrottlePos(byte) {
+function convertThrottlePos(byte: string) {
     return (parseInt(byte, 16) * 100) / 255;
 }
-function convertOxygenSensorOutput(byte) {
+function convertOxygenSensorOutput(byte: string) {
     return parseInt(byte, 16) * 0.005;
 }
-function convertRuntime(byteA, byteB) {
+function convertRuntime(byteA: string, byteB: string) {
     return (parseInt(byteA, 16) * 256.0) + parseInt(byteB, 16);
 }
-function convertfrpm(byteA, byteB) {
+function convertfrpm(byteA: string, byteB: string) {
     return ((parseInt(byteA, 16) * 256) + parseInt(byteB, 16)) * 0.079;
 }
-function convertfrpd(byteA, byteB) {
+function convertfrpd(byteA: string, byteB: string) {
     return ((parseInt(byteA, 16) * 256) + parseInt(byteB, 16)) * 10
 }
-function convertLambda(byteA, byteB, byteC, byteD) {
+function convertLambda(byteA: string, byteB: string, byteC: string, byteD: string) {
     const reply = {
         ratio: ((parseInt(byteA, 16) * 256) + parseInt(byteB, 16)) * 2 / 65535;
         voltage: ((parseInt(byteC, 16) * 256) + parseInt(byteD, 16)) * 8 / 65535;
     };
     return reply;
 }
-function convertPercentA(byte) {
+function convertPercentA(byte: string) {
     return parseInt(byte, 16) * 100 / 255;
 }
-function convertPercentB(byte) {
+function convertPercentB(byte: string) {
     return (parseInt(byte, 16) - 128) * 100 / 128;
 }
-function convertDistanceSinceCodesCleared(byteA, byteB) {
+function convertDistanceSinceCodesCleared(byteA: string, byteB: string) {
     return (parseInt(byteA, 16) * 256) + parseInt(byteB, 16);
 }
-function convertLambda2(byteA, byteB, byteC, byteD) {
+function convertLambda2(byteA: string, byteB: string, byteC: string, byteD: string) {
     const reply = {
         ratio: ((parseInt(byteA, 16) * 256) + parseInt(byteB, 16)) / 32768;
         voltage: ((parseInt(byteC, 16) * 256) + parseInt(byteD, 16)) / 256 - 128;
     };
     return reply;
 }
-function convertCatalystTemperature(byteA : string, byteB : string) {
+function convertCatalystTemperature(byteA: string, byteB: string) {
     return ((parseInt(byteA, 16) * 256) + parseInt(byteB, 16)) / 10 - 40;
 }
-function convertControlModuleVoltage(byteA : string, byteB : string) {
+function convertControlModuleVoltage(byteA: string, byteB: string) {
     return ((parseInt(byteA, 16) * 256) + parseInt(byteB, 16)) / 1000;
 }
-function convertAbsoluteLoad(byteA : string, byteB : string) {
+function convertAbsoluteLoad(byteA: string, byteB: string) {
     return ((parseInt(byteA, 16) * 256) + parseInt(byteB, 16)) * 100 / 255;
 }
-function convertLambda3(byteA : string, byteB : string) {
+function convertLambda3(byteA: string, byteB: string) {
     return ((parseInt(byteA, 16) * 256) + parseInt(byteB, 16)) / 32768;
 }
-function convertAmbientAirTemp(byte : string) {
+function convertAmbientAirTemp(byte: string) {
     return parseInt(byte, 16) - 40;
 }
-function convertMinutes(byteA : string, byteB : string) {
+function convertMinutes(byteA: string, byteB: string) {
     return (parseInt(byteA, 16) * 256) + parseInt(byteB, 16);
 }
-function convertExternalTestEquipment(byteA : string, byteB : string, byteC : string, byteD : string) {
+function convertExternalTestEquipment(byteA: string, byteB: string, byteC: string, byteD: string) {
     const reply = {
         te1: bitDecoder(byteA),
         te2: bitDecoder(byteB),
@@ -192,7 +192,7 @@ function convertExternalTestEquipment(byteA : string, byteB : string, byteC : st
     };
     return reply;
 }
-function convertExternalTestEquipment2(byteA : string, byteB : string, byteC : string, byteD : string) {
+function convertExternalTestEquipment2(byteA: string, byteB: string, byteC: string, byteD: string) {
     const reply = {
 
         te1: bitDecoder(byteA) * 10,
@@ -202,34 +202,34 @@ function convertExternalTestEquipment2(byteA : string, byteB : string, byteC : s
     };
     return reply;
 }
-function convertAbsoluteVaporPressure(byteA : string, byteB : string) {
+function convertAbsoluteVaporPressure(byteA: string, byteB: string) {
     return ((parseInt(byteA, 16) * 256) + parseInt(byteB, 16)) / 200;
 }
-function convertSystemVaporPressure(byteA : string, byteB : string) {
+function convertSystemVaporPressure(byteA: string, byteB: string) {
     return ((parseInt(byteA, 16) * 256) + parseInt(byteB, 16)) - 32767;
 }
-function convertShortOxygenSensorOutput(byteA : string, byteB : string) {
+function convertShortOxygenSensorOutput(byteA: string, byteB: string) {
     const reply = {
         bank1: (parseInt(byteA, 16) - 128) * 100 / 128,
         bank2: (parseInt(byteB, 16) - 128) * 100 / 128
     };
     return reply;
 }
-function convertFuelRailPressureAbs(byteA : string, byteB : string) {
+function convertFuelRailPressureAbs(byteA: string, byteB: string) {
     return ((parseInt(byteA, 16) * 256) + parseInt(byteB, 16)) * 10;
 }
-function convertFuelInjectionTiming(byteA : string, byteB : string) {
+function convertFuelInjectionTiming(byteA: string, byteB: string) {
     return (((parseInt(byteA, 16) * 256) + parseInt(byteB, 16)) - 26880) / 128;
 }
-function convertEngineFuelRate(byteA : string, byteB : string) {
+function convertEngineFuelRate(byteA: string, byteB: string) {
     return ((parseInt(byteA, 16) * 256) + parseInt(byteB, 16)) * 0.05;
 }
 
-function convertEngineTorque(byte : string) {
+function convertEngineTorque(byte: string) {
     return parseInt(byte, 16) - 125;
 }
 
-function convertExhastGasTemperature(byteA : string, byteB : string) {
+function convertExhastGasTemperature(byteA: string, byteB: string) {
     return (parseInt(byteA, 16) * 256 + parseInt(byteB, 16)) / 10 - 40;
 }
 //DTC
@@ -238,10 +238,10 @@ function notSupported() {
     return;
 }
 //VIN
-function convertVIN_count(byte : string) {
+function convertVIN_count(byte: string) {
     return byte;
 }
-function convertVIN(byte : string) {
+function convertVIN(byte: string) {
     byte = byte.split("");
     const tmp = [], vin = "";
     for (const i in byte) {
