@@ -15,6 +15,7 @@ export class OBDReader extends EventEmitter {
     connected: boolean = false;
     receivedData = '';
     protocol = '0';
+    btSerial: BSP.BluetoothSerialPort
 
     /**
      * Set the protocol version number to use with your car.  Defaults to 0
@@ -52,7 +53,7 @@ export class OBDReader extends EventEmitter {
         const btSerial = new BSP.BluetoothSerialPort();
         const search = new RegExp(query.replace(/\W/g, ''), 'gi');
 
-        btSerial.on('found', function (address, name) {
+        btSerial.on('found', (address: string, name: string) => {
             const addrMatch = !query || address.replace(/\W/g, '').search(search) != -1;
             const nameMatch = !query || name.replace(/\W/g, '').search(search) != -1;
 
@@ -64,8 +65,8 @@ export class OBDReader extends EventEmitter {
                 btSerial.findSerialPortChannel(address, function (channel) {
                     self.emit('debug', 'Found device channel: ' + channel);
                     self.connect(address, channel);
-                }, function (err) {
-                    console.log("Error finding serialport: " + err);
+                }, () => {
+                    console.log("Error finding serialport: ");
                 });
             } else {
                 self.emit('debug', 'Ignoring device: ' + name + ' (' + address + ')');
@@ -80,43 +81,43 @@ export class OBDReader extends EventEmitter {
     }
 
 
-    connect(address, channel) {
-        const self = this; //Enclosure
-        // const btSerial = new (require('bluetooth-serial-port')).BluetoothSerialPort();
+    connect(address: string, channel: number) {
+        // const self = this; //Enclosure
+        const btSerial = new BSP.BluetoothSerialPort();
 
-        btSerial.connect(address, channel, function () {
-            self.connected = true;
+        this.btSerial.connect(address, channel, () => {
+            this.connected = true;
 
-            self.write('ATZ');
+            this.write('ATZ');
             //Turns off extra line feed and carriage return
-            self.write('ATL0');
+            this.write('ATL0');
             //This disables spaces in in output, which is faster!
-            self.write('ATS0');
+            this.write('ATS0');
             //Turns off headers and checksum to be sent.
-            self.write('ATH0');
+            this.write('ATH0');
             //Turns off echo.
-            self.write('ATE0');
+            this.write('ATE0');
             //Turn adaptive timing to 2. This is an aggressive learn curve for adjusting the timeout. Will make huge difference on slow systems.
-            self.write('ATAT2');
+            this.write('ATAT2');
             //Set timeout to 10 * 4 = 40msec, allows +20 queries per second. This is the maximum wait-time. ATAT will decide if it should wait shorter or not.
             //self.write('ATST0A');
             //http://www.obdtester.com/elm-usb-commands
-            self.write('ATSP' + self.protocol);
+            this.write('ATSP' + this.protocol);
 
             //Event connected
-            self.emit('connected');
+            this.emit('connected');
 
-            btSerial.on('data', function (data) {
-                const currentString, arrayOfCommands;
-                currentString = self.receivedData + data.toString('utf8'); // making sure it's a utf8 string
+            this.btSerial.on('data', (data) => {
+                let currentString, arrayOfCommands;
+                currentString = this.receivedData + data.toString('utf8'); // making sure it's a utf8 string
 
                 arrayOfCommands = currentString.split('>');
 
                 let forString = '';
                 if (arrayOfCommands.length < 2) {
-                    self.receivedData = arrayOfCommands[0];
+                    this.receivedData = arrayOfCommands[0];
                 } else {
-                    for (const commandNumber = 0; commandNumber < arrayOfCommands.length; commandNumber++) {
+                    for (let commandNumber = 0; commandNumber < arrayOfCommands.length; commandNumber++) {
                         forString = arrayOfCommands[commandNumber];
                         if (forString === '') {
                             continue;
@@ -130,35 +131,36 @@ export class OBDReader extends EventEmitter {
                             }
                             const reply = parseOBDCommand(messageString);
                             //Event dataReceived.
-                            self.emit('dataReceived', reply);
-                            self.receivedData = '';
+                            this.emit('dataReceived', reply);
+                            this.receivedData = '';
                         }
                     }
                 }
             });
 
-            btSerial.on('failure', function (error) {
-                self.emit('error', 'Error with OBD-II device: ' + error);
+            btSerial.on('failure', (error: any) => {
+                this.emit('error', 'Error with OBD-II device: ' + error);
             });
 
         }, function (err) { //Error callback!
-            self.emit('error', 'Error with OBD-II device: ' + err);
+            this.emit('error', 'Error with OBD-II device: ' + err);
         });
 
         this.btSerial = btSerial; //Save the connection in OBDReader object.
 
-        this.intervalWriter = setInterval(function () {
-            if (queue.length > 0 && self.connected)
+        this.intervalWriter = setInterval(() => {
+            if (queue.length > 0 && this.connected)
                 try {
-                    self.btSerial.write(new Buffer(queue.shift(), "utf-8"), function (err, count) {
-                        if (err)
-                            self.emit('error', err);
+                    this.btSerial.write(new Buffer(queue.shift(), "utf-8"), (err) => {
+                        if (err) {
+                            this.emit('error', err);
+                        }
                     });
                 } catch (err) {
-                    self.emit('error', 'Error while writing: ' + err);
-                    self.emit('error', 'OBD-II Listeners deactivated, connection is probably lost.');
-                    clearInterval(self.intervalWriter);
-                    self.removeAllPollers();
+                    this.emit('error', 'Error while writing: ' + err);
+                    this.emit('error', 'OBD-II Listeners deactivated, connection is probably lost.');
+                    clearInterval(this.intervalWriter);
+                    this.removeAllPollers();
                 }
         }, writeDelay); //Updated with Adaptive Timing on ELM327. 20 queries a second seems good enough.
 
