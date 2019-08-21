@@ -3,9 +3,9 @@
 function checkHex(n: string) {
     return /^[0-9A-Fa-f]{1,64}$/.test(n);
 }
-function Hex2Bin(n: string) {
+function Hex2Bin(n: string): string {
     if (!checkHex(n)) {
-        return 0;
+        return '0';
     }
     return zeroFill(parseInt(n, 16).toString(2), 4);
 }
@@ -22,7 +22,7 @@ function bitDecoder(byte: string) {
 function convertPIDSupported(byteA: string, byteB: string, byteC: string, byteD: string) {
     const hexstring = byteA + byteB + byteC + byteD;
     const pidHex = hexstring.split('');
-    const pidStatus = [];
+    const pidStatus: boolean[] = [];
     pidHex.forEach(function (hex) {
         const hexPerm = Hex2Bin(hex).split('');
         hexPerm.forEach(function (perm) {
@@ -34,7 +34,7 @@ function convertPIDSupported(byteA: string, byteB: string, byteC: string, byteD:
 function convertFuelSystem(byteA: string, byteB: string) {
     const reply = {
         system1: bitDecoder(byteA),
-        system2: undefined
+        system2: undefined as number
     };
     if (byteB) {
         reply.system2 = bitDecoder(byteB);
@@ -43,7 +43,7 @@ function convertFuelSystem(byteA: string, byteB: string) {
 }
 function convertDTCCheck(byteA: string, byteB: string, byteC: string, byteD: string) {
     //ByteB, ByteC and ByteD are not read. These bytes are for testing purposes, which is not supported in this module.
-    const byteValue, mil, numberOfDTCs, reply;
+    let byteValue, mil, numberOfDTCs;
     byteValue = parseInt(byteA, 16);
     if ((byteValue >> 7) === 1) {
         mil = 1;
@@ -51,17 +51,18 @@ function convertDTCCheck(byteA: string, byteB: string, byteC: string, byteD: str
         mil = 0;
     }
     numberOfDTCs = byteValue % 128;
-    reply = {};
-    reply.numberOfErrors = numberOfDTCs;
-    reply.mil = mil;
+    const reply = {
+        numberOfErrors: numberOfDTCs,
+        mil: mil
+    };
     return reply;
 }
-function convertDTCRequest(byteA, byteB, byteC, byteD, byteE, byteF) {
+function convertDTCRequest(byteA: string, byteB: string, byteC: string, byteD: string, byteE: string, byteF: string) {
     const reply = {
-        errors: []
+        errors: [] as string[]
     };
 
-    const decodeDTCCode = function (byte1, byte2) {
+    const decodeDTCCode = function (byte1: string, byte2: string) {
         let codeString = "";
         let firstChar = '';
 
@@ -144,8 +145,8 @@ function convertfrpd(byteA: string, byteB: string) {
 }
 function convertLambda(byteA: string, byteB: string, byteC: string, byteD: string) {
     const reply = {
-        ratio: ((parseInt(byteA, 16) * 256) + parseInt(byteB, 16)) * 2 / 65535;
-        voltage: ((parseInt(byteC, 16) * 256) + parseInt(byteD, 16)) * 8 / 65535;
+        ratio: ((parseInt(byteA, 16) * 256) + parseInt(byteB, 16)) * 2 / 65535,
+        voltage: ((parseInt(byteC, 16) * 256) + parseInt(byteD, 16)) * 8 / 65535
     };
     return reply;
 }
@@ -160,8 +161,8 @@ function convertDistanceSinceCodesCleared(byteA: string, byteB: string) {
 }
 function convertLambda2(byteA: string, byteB: string, byteC: string, byteD: string) {
     const reply = {
-        ratio: ((parseInt(byteA, 16) * 256) + parseInt(byteB, 16)) / 32768;
-        voltage: ((parseInt(byteC, 16) * 256) + parseInt(byteD, 16)) / 256 - 128;
+        ratio: ((parseInt(byteA, 16) * 256) + parseInt(byteB, 16)) / 32768,
+        voltage: ((parseInt(byteC, 16) * 256) + parseInt(byteD, 16)) / 256 - 128
     };
     return reply;
 }
@@ -241,12 +242,12 @@ function notSupported() {
 function convertVIN_count(byte: string) {
     return byte;
 }
-function convertVIN(byte: string) {
-    byte = byte.split("");
-    const tmp = [], vin = "";
-    for (const i in byte) {
+function convertVIN(_byte: string) {
+    const byte = _byte.split("");
+    let tmp: number[] = [], vin = "";
+    for (let i in byte) {
         tmp[i] = parseInt(byte[i]);
-        tmp[i] = parseInt(tmp[i], 16);
+        tmp[i] = parseInt(tmp[i] as any, 16);
         vin += String.fromCharCode(tmp[i]);
     }
     return vin;
