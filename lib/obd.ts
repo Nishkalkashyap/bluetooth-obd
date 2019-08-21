@@ -132,7 +132,7 @@ OBDReader.prototype.getProtocol = function () {
  * Attempts discovery of and subsequent connection to Bluetooth device and channel
  * @param {string} query Query string to be fuzzy-ish matched against device name/address
  */
-OBDReader.prototype.autoconnect = function (query) {
+OBDReader.prototype.autoconnect = function (query : string) {
     const self = this; //Enclosure
     const btSerial = new (require('bluetooth-serial-port')).BluetoothSerialPort();
     const search = new RegExp(query.replace(/\W/g, ''), 'gi');
@@ -164,11 +164,6 @@ OBDReader.prototype.autoconnect = function (query) {
     btSerial.inquire();
 }
 
-/**
- * Connect/Open the bluetooth serial port and add events to bluetooth-serial-port.
- * Also starts the intervalWriter that is used to write the queue.
- * @this {OBDReader}
- */
 OBDReader.prototype.connect = function (address, channel) {
     const self = this; //Enclosure
     const btSerial = new (require('bluetooth-serial-port')).BluetoothSerialPort();
@@ -201,7 +196,7 @@ OBDReader.prototype.connect = function (address, channel) {
 
             arrayOfCommands = currentString.split('>');
 
-            const forString;
+            let forString = '';
             if (arrayOfCommands.length < 2) {
                 self.receivedData = arrayOfCommands[0];
             } else {
@@ -212,13 +207,12 @@ OBDReader.prototype.connect = function (address, channel) {
                     }
 
                     const multipleMessages = forString.split('\r');
-                    for (const messageNumber = 0; messageNumber < multipleMessages.length; messageNumber++) {
+                    for (let messageNumber = 0; messageNumber < multipleMessages.length; messageNumber++) {
                         const messageString = multipleMessages[messageNumber];
                         if (messageString === '') {
                             continue;
                         }
-                        const reply;
-                        reply = parseOBDCommand(messageString);
+                        const reply = parseOBDCommand(messageString);
                         //Event dataReceived.
                         self.emit('dataReceived', reply);
                         self.receivedData = '';
