@@ -1,5 +1,5 @@
 const EventEmitter = require('events').EventEmitter;
-import util from 'util';
+import BSP from 'bluetooth-serial-port';
 
 import PIDS from './obdInfo';
 
@@ -9,7 +9,7 @@ const writeDelay = 50;
  * Queue for writing
  * @type {Array}
  */
-const queue = [];
+const queue: Array<any> = [];
 
 export class OBDReader extends EventEmitter {
     connected: boolean = false;
@@ -49,7 +49,7 @@ export class OBDReader extends EventEmitter {
      */
     autoconnect(query: string) {
         const self = this; //Enclosure
-        const btSerial = new (require('bluetooth-serial-port')).BluetoothSerialPort();
+        const btSerial = new BSP.BluetoothSerialPort();
         const search = new RegExp(query.replace(/\W/g, ''), 'gi');
 
         btSerial.on('found', function (address, name) {
@@ -82,7 +82,7 @@ export class OBDReader extends EventEmitter {
 
     connect(address, channel) {
         const self = this; //Enclosure
-        const btSerial = new (require('bluetooth-serial-port')).BluetoothSerialPort();
+        // const btSerial = new (require('bluetooth-serial-port')).BluetoothSerialPort();
 
         btSerial.connect(address, channel, function () {
             self.connected = true;
@@ -172,7 +172,7 @@ export class OBDReader extends EventEmitter {
      * @param {Function} cb Callback function when the serial connection is closed
      * @this {OBDReader}
      */
-    disconnect(cb) {
+    disconnect(cb: Function) {
         clearInterval(this.intervalWriter);
         queue.length = 0; //Clears queue
         if (typeof cb === 'function') {
@@ -189,7 +189,7 @@ export class OBDReader extends EventEmitter {
      * @param {number} replies The number of replies that are expected. Default = 0. 0 --> infinite
      * AT Messages --> Zero replies!!
      */
-    write(message, replies) {
+    write(message: string, replies?: number) {
         if (replies === undefined) {
             replies = 0;
         }
@@ -214,20 +214,20 @@ export class OBDReader extends EventEmitter {
      * @this {OBDReader}
      * @param {string} name Look into obdInfo.js for all PIDS.
      */
-    requestValueByName(name) {
+    requestValueByName(name: string) {
         this.write(getPIDByName(name));
     };
 
-    activePollers = [];
+    activePollers: string[] = [];
 
     /**
      * Adds a poller to the poller-array.
      * @this {OBDReader}
      * @param {string} name Name of the poller you want to add.
      */
-    addPoller(name) {
+    addPoller(name: string) {
         const stringToSend = getPIDByName(name);
-        activePollers.push(stringToSend);
+        this.activePollers.push(stringToSend);
     };
 
     /**
@@ -235,10 +235,10 @@ export class OBDReader extends EventEmitter {
      * @this {OBDReader}
      * @param {string} name Name of the poller you want to remove.
      */
-    removePoller(name) {
+    removePoller(name: string) {
         const stringToDelete = getPIDByName(name);
-        const index = activePollers.indexOf(stringToDelete);
-        activePollers.splice(index, 1);
+        const index = this.activePollers.indexOf(stringToDelete);
+        this.activePollers.splice(index, 1);
     };
 
     /**
@@ -246,19 +246,45 @@ export class OBDReader extends EventEmitter {
      * @this {OBDReader}
      */
     removeAllPollers() {
-        activePollers.length = 0; //This does not delete the array, it just clears every element.
+        this.activePollers.length = 0; //This does not delete the array, it just clears every element.
     };
-    
+
     /**
      * Writes all active pollers.
      * @this {OBDReader}
      */
     writePollers() {
-        let i : number;
-        for (i = 0; i < activePollers.length; i++) {
-            this.write(activePollers[i], 1);
+        let i: number;
+        for (i = 0; i < this.activePollers.length; i++) {
+            this.write(this.activePollers[i], 1);
         }
     };
+
+    pollerInterval: number;
+    /**
+     * Starts polling. Lower interval than activePollers * 50 will probably give buffer overflows. See writeDelay.
+     * @this {OBDReader}
+     * @param {number} interval Frequency how often all variables should be polled. (in ms). If no value is given, then for each activePoller 75ms will be added.
+     */
+    startPolling(interval: number) {
+        if (interval === undefined) {
+            interval = this.activePollers.length * (writeDelay * 2); //Double the delay, so there's room for manual requests.
+        }
+
+        this.pollerInterval = setInterval(() => {
+            this.writePollers();
+        }, interval) as any as number;
+    };
+
+    /**
+     * Stops polling.
+     * @this {OBDReader}
+     */
+    stopPolling() {
+        clearInterval(this.pollerInterval);
+    };
+
+
 }
 
 // util.inherits(OBDReader, EventEmitter);
@@ -268,7 +294,7 @@ export class OBDReader extends EventEmitter {
  * @param name Name of the PID you want the hexadecimal (in ASCII text) value of.
  * @return {string} PID in hexadecimal ASCII
  */
-function getPIDByName(name) {
+function getPIDByName(name: string): string {
     let i: number;
     for (i = 0; i < PIDS.length; i++) {
         if (PIDS[i].name === name) {
@@ -290,12 +316,11 @@ function getPIDByName(name) {
  * @return {string} reply.mode - The mode of the PID. --! Only if the reply is a PID.
  * @return {string} reply.pid - The PID. --! Only if the reply is a PID.
  */
-function parseOBDCommand(hexString) {
-    const reply,
-        byteNumber,
+function parseOBDCommand(hexString: string): object {
+    const byteNumber,
         valueArray; //New object
 
-    reply = {};
+    const reply = {};
     if (hexString === "NO DATA" || hexString === "OK" || hexString === "?" || hexString === "UNABLE TO CONNECT" || hexString === "SEARCHING...") {
         //No data or OK is the response, return directly.
         reply.value = hexString;
@@ -344,27 +369,3 @@ function parseOBDCommand(hexString) {
     }
     return reply;
 }
-
-const pollerInterval;
-/**
- * Starts polling. Lower interval than activePollers * 50 will probably give buffer overflows. See writeDelay.
- * @this {OBDReader}
- * @param {number} interval Frequency how often all variables should be polled. (in ms). If no value is given, then for each activePoller 75ms will be added.
- */
-OBDReader.prototype.startPolling = function (interval) {
-    if (interval === undefined) {
-        interval = activePollers.length * (writeDelay * 2); //Double the delay, so there's room for manual requests.
-    }
-
-    const self = this;
-    pollerInterval = setInterval(function () {
-        self.writePollers();
-    }, interval);
-};
-/**
- * Stops polling.
- * @this {OBDReader}
- */
-OBDReader.prototype.stopPolling = function () {
-    clearInterval(pollerInterval);
-};

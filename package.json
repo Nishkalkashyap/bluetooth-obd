@@ -19,6 +19,7 @@
     "bluetooth-serial-port": "^2.2.5"
   },
   "devDependencies": {
+    "tslib": "^1.10.0",
     "typescript": "^3.5.3"
   },
   "scripts": {
